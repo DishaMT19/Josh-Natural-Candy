@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment | Josh Natural Candy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6c757d;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --google-pay: #e05555;
+            --razorpay: #2b4f8a;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .payment-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            flex-grow: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5a6268 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .payment-header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255,255,255,0.1) 0%,
+                rgba(255,255,255,0) 50%,
+                rgba(255,255,255,0.1) 100%
+            );
+            transform: rotate(30deg);
+            animation: shimmer 3s infinite linear;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        .payment-header h2 {
+            margin: 0;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .payment-body {
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .payment-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .payment-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .payment-section-title i {
+            margin-right: 10px;
+        }
+        
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .order-summary-total {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .payment-method {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .payment-method::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .payment-method:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .payment-method:hover::before {
+            opacity: 1;
+        }
+        
+        .payment-method.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(108, 117, 125, 0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .payment-method.selected::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .payment-method i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .payment-method.google-pay i {
+            color: var(--google-pay);
+        }
+        
+        .payment-method.razorpay i {
+            color: var(--razorpay);
+        }
+        
+        .payment-method img {
+            height: 30px;
+            margin-bottom: 0.5rem;
+            object-fit: contain;
+        }
+        
+        .payment-method-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .payment-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            background-color: var(--success-color);
+            border: none;
+            margin-top: 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .payment-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s ease;
+        }
+        
+        .payment-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .payment-btn:hover::before {
+            left: 100%;
+        }
+        
+        .payment-btn:active {
+            transform: translateY(0);
+        }
+        
+        .payment-security {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1.5rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .payment-security i {
+            margin-right: 5px;
+            color: var(--success-color);
+        }
+        
+        .billing-info p {
+            margin-bottom: 0.5rem;
+        }
+        
+        .edit-billing {
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .edit-billing:hover {
+            text-decoration: underline;
+            color: #5a6268;
+        }
+        
+        /* Credit card form */
+        .credit-card-form {
+            display: none;
+            margin-top: 1rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .credit-card-form.active {
+            display: block;
+        }
+        
+        .card-icons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .card-icon {
+            width: 40px;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+            filter: grayscale(100%);
+        }
+        
+        .card-icon.active {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+        
+        /* Payment processing animation */
+        .payment-processing {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .payment-processing.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .processing-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.5s ease;
+        }
+        
+        .payment-processing.active .processing-content {
+            transform: translateY(0);
+        }
+        
+        .processing-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(108, 117, 125, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .processing-text {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        
+        .processing-dots {
+            display: inline-block;
+            position: relative;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .processing-dots span {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        
+        .processing-dots span:nth-child(1) {
+            left: 0;
+            animation-delay: 0s;
+        }
+        
+        .processing-dots span:nth-child(2) {
+            left: 12px;
+            animation-delay: 0.2s;
+        }
+        
+        .processing-dots span:nth-child(3) {
+            left: 24px;
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Success animation */
+        .success-animation {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        
+        .success-animation .checkmark {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 5;
+            stroke: var(--success-color);
+            stroke-miterlimit: 10;
+            box-shadow: 0 0 0 rgba(40, 167, 69, 0.4);
+            animation: checkmark-fill 0.4s ease-in-out 0.4s forwards, checkmark-scale 0.3s ease-in-out 0.9s both;
+        }
+        
+        .success-animation .checkmark-circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 5;
+            stroke-miterlimit: 10;
+            stroke: var(--success-color);
+            fill: none;
+            animation: checkmark-stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        
+        .success-animation .checkmark-check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: checkmark-stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        
+        @keyframes checkmark-stroke {
+            100% { stroke-dashoffset: 0; }
+        }
+        
+        @keyframes checkmark-scale {
+            0%, 100% { transform: none; }
+            50% { transform: scale3d(1.1, 1.1, 1); }
+        }
+        
+        @keyframes checkmark-fill {
+            100% { box-shadow: inset 0 0 0 100px rgba(40, 167, 69, 0.1); }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .payment-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .payment-body {
+                padding: 1.5rem;
+            }
+            
+            .payment-methods {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+        
+        /* QR Code styles */
+        #qrContainer {
+            display: none;
+            transition: all 0.3s ease;
+        }
+        
+        #qrContainer.show {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Form validation styles */
+        .is-invalid {
+            border-color: var(--danger-color) !important;
+        }
+        
+        .invalid-feedback {
+            color: var(--danger-color);
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="payment-header">
+            <h2><i class="fas fa-lock"></i> Secure Payment</h2>
+        </div>
+        
+        <div class="payment-body">
+            <!-- Order Summary Section -->
+            <div class="payment-section">
+                <div class="payment-section-title">
+                    <i class="fas fa-receipt"></i> Order Summary
+                </div>
+                
+                <div id="orderSummaryItems">
+                    <!-- Items will be populated by JavaScript -->
+                </div>
+                
+                <div class="order-summary-item">
+                    <span>Subtotal:</span>
+                    <span id="orderSubtotal">₹0.00</span>
+                </div>
+                <div class="order-summary-item">
+                    <span>Tax (10%):</span>
+                    <span id="orderTax">₹0.00</span>
+                </div>
+                <div class="order-summary-item">
+                    <span>Service Charge:</span>
+                    <span id="orderServiceCharge">₹15.00</span>
+                </div>
+                
+                <div class="order-summary-item order-summary-total">
+                    <span>Total Amount:</span>
+                    <span id="orderTotal">₹0.00</span>
+                </div>
+            </div>
+            
+            <!-- Billing Information Section -->
+            <div class="payment-section">
+                <div class="payment-section-title">
+                    <i class="fas fa-user"></i> Billing Information
+                    <span class="edit-billing ms-auto" id="editBillingBtn">Edit</span>
+                </div>
+                
+                <div id="billingInfoView">
+                    <p><strong>Name:</strong> <span id="billingName">-</span></p>
+                    <p><strong>Email:</strong> <span id="billingEmail">-</span></p>
+                    <p><strong>Phone:</strong> <span id="billingPhone">-</span></p>
+                    <p><strong>Address:</strong> <span id="billingAddress">-</span></p>
+                </div>
+                
+                <div id="billingInfoEdit" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="editBillingName" required>
+                        <div class="invalid-feedback">Please enter your name</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editBillingEmail" required>
+                        <div class="invalid-feedback">Please enter a valid email</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="editBillingPhone" required>
+                        <div class="invalid-feedback">Please enter a valid phone number</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" id="editBillingAddress" rows="2" required></textarea>
+                        <div class="invalid-feedback">Please enter your address</div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-outline-secondary me-2" id="cancelEditBillingBtn">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" id="saveBillingBtn">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment Method Section -->
+            <div class="payment-section">
+                <div class="payment-section-title">
+                    <i class="fas fa-credit-card"></i> Payment Method
+                </div>
+                
+                <div class="payment-methods">
+                    <div class="payment-method selected" data-method="card">
+                        <i class="far fa-credit-card"></i>
+                        <div class="payment-method-name">Credit Card</div>
+                    </div>
+                    <div class="payment-method google-pay" data-method="google-pay">
+                        <i class="fab fa-google-pay" style="color: var(--google-pay);"></i>
+                        <div class="payment-method-name">Google Pay</div>
+                    </div>
+                    <div class="payment-method" data-method="upi">
+                        <i class="fas fa-mobile-alt"></i>
+                        <div class="payment-method-name">UPI</div>
+                    </div>
+                </div>
+                
+                <!-- Credit Card Form (shown by default) -->
+                <div class="credit-card-form active" id="creditCardForm">
+                    <div class="card-icons">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/visa/visa-original.svg" class="card-icon" alt="Visa">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mastercard/mastercard-original.svg" class="card-icon" alt="Mastercard">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apple/apple-original.svg" class="card-icon" alt="Apple Pay">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Card Number</label>
+                        <input type="text" class="form-control" placeholder="1234 5678 9012 3456" id="cardNumber" required>
+                        <div class="invalid-feedback">Please enter a valid card number</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="text" class="form-control" placeholder="MM/YY" id="cardExpiry" required>
+                            <div class="invalid-feedback">Please enter expiry date</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CVV</label>
+                            <input type="text" class="form-control" placeholder="123" id="cardCvv" required>
+                            <div class="invalid-feedback">Please enter CVV</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Name on Card</label>
+                        <input type="text" class="form-control" placeholder="John Doe" id="cardName" required>
+                        <div class="invalid-feedback">Please enter name on card</div>
+                    </div>
+                </div>
+                
+                <!-- Google Pay Form -->
+                <div class="credit-card-form" id="googlePayForm">
+                    <div class="text-center py-4">
+                        <i class="fab fa-google-pay fa-4x mb-3" style="color: var(--google-pay);"></i>
+                        <p>You'll be redirected to Google Pay to complete your payment</p>
+                    </div>
+                </div>
+                
+                <!-- UPI Form -->
+                <div class="credit-card-form" id="upiForm">
+                    <div class="text-center py-4">
+                        <i class="fas fa-mobile-alt fa-4x mb-3"></i>
+                        <p>Enter your UPI ID to complete payment</p>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="yourname@upi" id="upiId">
+                            <div class="invalid-feedback">Please enter a valid UPI ID</div>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-muted small">OR</p>
+                            <button class="btn btn-outline-primary" id="showQrBtn">
+                                <i class="fas fa-qrcode me-2"></i> Scan QR Code
+                            </button>
+                        </div>
+
+                        <!-- QR Code image (initially hidden) -->
+                        <div class="text-center mt-3" id="qrContainer">
+                            <img src="images/qr.jpg" alt="UPI QR Code" class="img-fluid" style="max-width: 200px;">
+                            <p class="text-muted small mt-2">Scan this QR using any UPI app</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment Button -->
+            <button class="btn btn-primary payment-btn" id="completePaymentBtn">
+                <span id="paymentBtnText">Complete Payment</span>
+                <span id="paymentProcessing" style="display: none;">
+                    <span class="processing-spinner"></span> Processing...
+                </span>
+            </button>
+            
+            <div class="payment-security">
+                <i class="fas fa-shield-alt"></i> 256-bit SSL Secure Payment
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Processing Overlay -->
+    <div class="payment-processing" id="paymentProcessingOverlay">
+        <div class="processing-content">
+            <div class="processing-spinner" id="processingSpinner"></div>
+            <div class="processing-text">
+                Processing your payment
+                <div class="processing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <p class="text-muted small">Please wait while we process your transaction</p>
+        </div>
+    </div>
+
+    <!-- Payment Success Overlay -->
+    <div class="payment-processing" id="paymentSuccessOverlay">
+        <div class="processing-content">
+            <div class="success-animation">
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+            </div>
+            <h5>Payment Successful!</h5>
+            <p id="successOrderId">Order ID: </p>
+            <p class="text-muted">Your order has been placed successfully</p>
+            <button class="btn btn-primary mt-3" id="continueShoppingBtn">
+                <i class="fas fa-ice-cream me-2"></i> Continue Shopping
+            </button>
+        </div>
+    </div>
+    
+    <div class="mt-5">
+    <h5>Previous Orders</h5>
+    <div id="orderHistoryList" class="mt-3"></div>
+</div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Parse URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderParam = urlParams.get("order");
+            const userParam = urlParams.get("user");
+            
+            if (!orderParam || !userParam) {
+                alert("Invalid payment page access. Redirecting to home page.");
+                window.location.href = "index.html";
+                return;
+            }
+            
+            const order = JSON.parse(decodeURIComponent(orderParam));
+            const user = JSON.parse(decodeURIComponent(userParam));
+            
+            // Save order to localStorage if not already saved
+            let orders = JSON.parse(localStorage.getItem("orders")) || [];
+            const orderExists = orders.some(o => o.id === order.id);
+            if (!orderExists) {
+                orders.push(order);
+                localStorage.setItem("orders", JSON.stringify(orders));
+            }
+
+            // Clear the cart if this is a new order
+            if (!orderExists) {
+                localStorage.removeItem("cart");
+            }
+
+            // Populate order summary
+            const orderSummaryItems = document.getElementById('orderSummaryItems');
+            let itemsHtml = '';
+            
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-summary-item">
+                        <span>${item.name} (${item.quantity}x)</span>
+                        <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            orderSummaryItems.innerHTML = itemsHtml;
+
+            document.getElementById('orderSubtotal').textContent = `₹${order.subtotal.toFixed(2)}`;
+            document.getElementById('orderTax').textContent = `₹${order.tax.toFixed(2)}`;
+            document.getElementById('orderTotal').textContent = `₹${order.total.toFixed(2)}`;
+
+            // Populate billing info
+            document.getElementById('billingName').textContent = user.name || '-';
+            document.getElementById('billingEmail').textContent = user.email || '-';
+            document.getElementById('billingPhone').textContent = user.phone || '-';
+            document.getElementById('billingAddress').textContent = user.address || '-';
+
+            document.getElementById('editBillingName').value = user.name || '';
+            document.getElementById('editBillingEmail').value = user.email || '';
+            document.getElementById('editBillingPhone').value = user.phone || '';
+            document.getElementById('editBillingAddress').value = user.address || '';
+
+            // Payment method selection
+            let selectedPaymentMethod = 'card';
+            const paymentMethods = document.querySelectorAll('.payment-method');
+            const paymentForms = {
+                'card': document.getElementById('creditCardForm'),
+                'google-pay': document.getElementById('googlePayForm'),
+                'upi': document.getElementById('upiForm')
+            };
+
+            paymentMethods.forEach(method => {
+                method.addEventListener('click', function() {
+                    // Deselect all
+                    paymentMethods.forEach(m => m.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    // Hide all forms
+                    Object.values(paymentForms).forEach(form => {
+                        form.style.display = 'none';
+                        form.classList.remove('active');
+                    });
+
+                    // Show selected form
+                    const methodType = this.getAttribute('data-method');
+                    selectedPaymentMethod = methodType;
+                    if (paymentForms[methodType]) {
+                        paymentForms[methodType].style.display = 'block';
+                        setTimeout(() => {
+                            paymentForms[methodType].classList.add('active');
+                        }, 10);
+                    }
+                });
+            });
+
+            // QR Code toggle
+            document.getElementById("showQrBtn").addEventListener("click", function(e) {
+                e.preventDefault();
+                const qrContainer = document.getElementById("qrContainer");
+                qrContainer.style.display = qrContainer.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Card number formatting
+            document.getElementById('cardNumber').addEventListener('input', function() {
+                let value = this.value.replace(/\s+/g, '');
+                if (value.length > 0) {
+                    value = value.match(/.{1,4}/g).join(' ');
+                }
+                this.value = value;
+                
+                // Highlight card type icon
+                const cardIcons = document.querySelectorAll('.card-icon');
+                cardIcons.forEach(icon => icon.classList.remove('active'));
+                
+                if (/^4/.test(value)) {
+                    cardIcons[0].classList.add('active');
+                } else if (/^5[1-5]/.test(value)) {
+                    cardIcons[1].classList.add('active');
+                } else if (/^220[0-4]/.test(value)) {
+                    cardIcons[2].classList.add('active');
+                }
+            });
+
+            // Expiry date formatting
+            document.getElementById('cardExpiry').addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length > 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                this.value = value;
+            });
+
+            // Edit billing info
+            document.getElementById('editBillingBtn').addEventListener('click', function() {
+                document.getElementById('billingInfoView').style.display = 'none';
+                document.getElementById('billingInfoEdit').style.display = 'block';
+            });
+
+            // Cancel edit billing
+            document.getElementById('cancelEditBillingBtn').addEventListener('click', function() {
+                document.getElementById('billingInfoView').style.display = 'block';
+                document.getElementById('billingInfoEdit').style.display = 'none';
+                
+                // Clear validation errors
+                document.querySelectorAll('#billingInfoEdit input, #billingInfoEdit textarea').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+            });
+
+            // Save billing info
+            document.getElementById('saveBillingBtn').addEventListener('click', function() {
+                let isValid = true;
+                const inputs = [
+                    document.getElementById('editBillingName'),
+                    document.getElementById('editBillingEmail'),
+                    document.getElementById('editBillingPhone'),
+                    document.getElementById('editBillingAddress')
+                ];
+                
+                // Validate inputs
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                
+                // Additional email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(document.getElementById('editBillingEmail').value)) {
+                    document.getElementById('editBillingEmail').classList.add('is-invalid');
+                    isValid = false;
+                }
+                
+                if (!isValid) return;
+                
+                // Update view
+                document.getElementById('billingName').textContent = document.getElementById('editBillingName').value;
+                document.getElementById('billingEmail').textContent = document.getElementById('editBillingEmail').value;
+                document.getElementById('billingPhone').textContent = document.getElementById('editBillingPhone').value;
+                document.getElementById('billingAddress').textContent = document.getElementById('editBillingAddress').value;
+                
+                // Update user object
+                user.name = document.getElementById('editBillingName').value;
+                user.email = document.getElementById('editBillingEmail').value;
+                user.phone = document.getElementById('editBillingPhone').value;
+                user.address = document.getElementById('editBillingAddress').value;
+                
+                // Save to localStorage
+                localStorage.setItem('loggedInUser', JSON.stringify(user));
+                
+                // Switch back to view mode
+                document.getElementById('billingInfoView').style.display = 'block';
+                document.getElementById('billingInfoEdit').style.display = 'none';
+                
+                // Show success toast
+                showToast('Billing information updated successfully!', 'success');
+            });
+
+            // Complete payment
+            document.getElementById('completePaymentBtn').addEventListener('click', function() {
+                if (!selectedPaymentMethod) {
+                    showToast('Please select a payment method', 'error');
+                    return;
+                }
+                
+                
+                // Validate payment method specific fields
+                let isValid = true;
+                
+                if (selectedPaymentMethod === 'card') {
+                    const cardFields = [
+                        document.getElementById('cardNumber'),
+                        document.getElementById('cardExpiry'),
+                        document.getElementById('cardCvv'),
+                        document.getElementById('cardName')
+                    ];
+                    
+                    cardFields.forEach(field => {
+                        if (!field.value.trim()) {
+                            field.classList.add('is-invalid');
+                            isValid = false;
+                        } else {
+                            field.classList.remove('is-invalid');
+                        }
+                    });
+                    
+                    // Additional card number validation (basic)
+                    const cardNumber = document.getElementById('cardNumber').value.replace(/\s+/g, '');
+                    if (cardNumber.length < 16 || !/^\d+$/.test(cardNumber)) {
+                        document.getElementById('cardNumber').classList.add('is-invalid');
+                        isValid = false;
+                    }
+                } else if (selectedPaymentMethod === 'upi') {
+                    const upiId = document.getElementById('upiId').value.trim();
+                    if (!upiId || !upiId.includes('@')) {
+                        document.getElementById('upiId').classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        document.getElementById('upiId').classList.remove('is-invalid');
+                    }
+                }
+                
+                if (!isValid) {
+                    showToast('Please fill all required fields correctly', 'error');
+                    return;
+                }
+                
+                const btn = this;
+                const btnText = document.getElementById('paymentBtnText');
+                const processing = document.getElementById('paymentProcessing');
+                const processingOverlay = document.getElementById('paymentProcessingOverlay');
+                const successOverlay = document.getElementById('paymentSuccessOverlay');
+
+                btnText.style.display = 'none';
+                processing.style.display = 'inline';
+                btn.disabled = true;
+                processingOverlay.classList.add('active');
+
+
+
+                ///
+                // Simulate processing delay
+                setTimeout(function() {
+                    // Update order status
+                    order.status = 'Completed';
+                    order.paymentMethod = selectedPaymentMethod;
+                    order.paymentDate = new Date().toISOString();
+                    
+                    // Update orders in localStorage
+                    const orders = JSON.parse(localStorage.getItem("orders")) || [];
+                    const orderIndex = orders.findIndex(o => o.id === order.id);
+                    if (orderIndex !== -1) {
+                        orders[orderIndex] = order;
+                        localStorage.setItem("orders", JSON.stringify(orders));
+                    }
+                    
+                    // Show success
+                    processingOverlay.classList.remove('active');
+                    document.getElementById('successOrderId').textContent = `Order ID: ${order.id}`;
+                    successOverlay.classList.add('active');
+                    // Show order history (after order is saved)
+                    const historyContainer = document.getElementById('orderHistoryList');
+                    if (historyContainer) {
+                        const allOrders = JSON.parse(localStorage.getItem('orders')) || [];
+                        const completedOrders = allOrders.filter(o => o.status === 'Completed');
+
+                        historyContainer.innerHTML = completedOrders.reverse().map(o => `
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <h6>Order ID: ${o.id}</h6>
+                                    <div>${o.items.map(i => `${i.name} x ${i.quantity}`).join(', ')}</div>
+                                    <div>Total: ₹${o.total.toFixed(2)}</div>
+                                    <div>Paid via: ${o.paymentMethod || '-'}</div>
+                                    <div>Date: ${new Date(o.paymentDate).toLocaleString()}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+
+                    
+                    // Automatically redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = "account.html";
+                    }, 3000);
+                }, 3000);
+            });
+
+            // Continue shopping button
+            document.getElementById('continueShoppingBtn').addEventListener('click', function() {
+                window.location.href = "index.html";
+            });
+            
+            // Helper function to show toast messages
+            function showToast(message, type) {
+                const toast = document.createElement('div');
+                toast.className = `position-fixed bottom-0 end-0 p-3`;
+                toast.style.zIndex = '9999';
+                
+                const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+                
+                toast.innerHTML = `
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header ${bgClass} text-white">
+                            <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        });
+        console.log("SENDING ORDER DATA:", JSON.stringify({ user, order }, null, 2));
+
+        // Inside setTimeout after updating localStorage orders
+        fetch("backend/save_order.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user, order })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log("Order saved to DB with ID:", data.order_id);
+            } else {
+                console.error("Failed to save order:", data.message);
+            }
+        })
+        .catch(err => console.error("Network error:", err));
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Josh Natural Candy - Artisanal Popsicles</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka+One&display=swap" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="script" href="script.js">
+</head>
+
+<body>
+    <!-- Loader -->
+    <div class="loader-container" id="loader">
+        <div class="loader">
+            <div class="loader-popsicle"></div>
+            <div class="loader-popsicle"></div>
+            <div class="loader-popsicle"></div>
+        </div>
+        <div class="loader-logo">Josh Natural Candy</div>
+    </div>
+
+   <!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Welcome to Josh Natural Candy!</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-pills mb-3 justify-content-center" id="auth-tab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login" type="button">Login</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register" type="button">Register</button>
+          </li>
+        </ul>
+        <div class="tab-content" id="auth-tabContent">
+          <div class="tab-pane fade show active" id="login" role="tabpanel">
+            <form id="loginForm">
+              <div class="mb-3">
+                <label for="loginEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="loginEmail" required>
+              </div>
+              <div class="mb-3">
+                <label for="loginPassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="loginPassword" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Login</button>
+              <div class="text-center mt-3">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="googleLogin">
+                  <i class="fab fa-google me-2"></i>Login with Google
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="register" role="tabpanel">
+            <form id="registerForm">
+              <div class="mb-3">
+                <label for="registerName" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="registerName" required>
+              </div>
+              <div class="mb-3">
+                <label for="registerEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="registerEmail" required>
+              </div>
+              <div class="mb-3">
+                <label for="registerPassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="registerPassword" required>
+              </div>
+              <div class="mb-3">
+                <label for="registerConfirm" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="registerConfirm" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Register</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Continue as Guest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const user = JSON.parse(localStorage.getItem('loggedInUser')) || {};
+
+  if (!user || !user.email) {
+    // Show login modal instead of redirect
+    const loginModalEl = document.getElementById('loginModal');
+    const loginModal = new bootstrap.Modal(loginModalEl);
+    loginModal.show();
+    return;
+  }
+
+  // Your cart or user-specific logic can continue here if user is logged in
+  console.log("User logged in:", user);
+});
+
+// LOGIN
+document.getElementById('loginForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+
+  const res = await fetch('backend/login.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  if (data.status === 'success') {
+    localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+    alert('Login successful!');
+    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+    location.reload(); // optional: reload page to update UI
+  } else {
+    alert(data.message || 'Login failed');
+  }
+});
+
+// REGISTER
+document.getElementById('registerForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const name = document.getElementById('registerName').value;
+  const email = document.getElementById('registerEmail').value;
+  const password = document.getElementById('registerPassword').value;
+  const confirm = document.getElementById('registerConfirm').value;
+
+  if (password !== confirm) {
+    alert("Passwords don't match!");
+    return;
+  }
+
+  const res = await fetch('backend/register.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password })
+  });
+
+  const data = await res.json();
+  if (data.status === 'success') {
+    alert('Registered! Please log in.');
+    document.getElementById('login-tab').click(); // switch to login tab
+  } else {
+    alert(data.message || 'Registration failed');
+  }
+});
+</script>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid px-3">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-ice-cream me-2"></i> Josh Natural Candy
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="#home">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#flavors">Flavors</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="about.html">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#locations">Locations</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#seasonal">Seasonal</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#contact">Contact</a>
+                </li>
+            </ul>
+            
+            <div class="d-flex align-items-center">
+                <form class="d-flex me-2" id="searchForm">
+                    <form id="searchForm">
+                <div class="input-group">
+                    <input class="form-control" type="search" placeholder="Search flavors..." id="searchInput">
+                    <button class="btn btn-outline-primary" type="submit">
+                    <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                </form>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="account.html" id="accountDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i> Account
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header" id="userGreeting">Hello Guest</h6></li>
+                            <li><a class="dropdown-item" href="#" id="loginDropdownBtn">Login</a></li>
+                            <li><a class="dropdown-item" href="#" id="registerDropdownBtn">Register</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="account.html"><i class="fas fa-user me-2"></i>My Account</a></li>
+                            <li><a class="dropdown-item d-none" href="account.html" id="logoutDropdownBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- <li class="nav-item">
+                        <a class="nav-link position-relative" href="#" data-bs-toggle="offcanvas" data-bs-target="#cartSidebar">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+                        </a>
+                    </li> -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+    <!-- Hero Section -->
+    <section class="hero-section" id="home">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <h1 class="hero-title">Cool Off With <span class="d-block">Josh Natural Candy</span></h1>
+                    <p class="hero-subtitle">Handcrafted artisanal popsicles made with real fruit and natural ingredients. Perfect for hot summer days!</p>
+
+                    <div class="d-flex flex-wrap">
+                        <a href="#flavors" class="btn btn-hero" data-aos="fade-up" data-aos-delay="100">
+                            <i class="fas fa-ice-cream me-2"></i> Our Flavors
+                        </a>
+                        <a href="#locations" class="btn btn-hero" data-aos="fade-up" data-aos-delay="100">
+                            <i class="fas fa-map-marker-alt me-2"></i> Find Us
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 text-center" data-aos="fade-left">
+                    <img src="images/home.jpeg" alt="Colorful popsicles" class="img-fluid hero-image rounded shadow-lg" style="max-height: 400px; border: 10px solid white;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Flavors Section -->
+    <!-- Flavors Section -->
+<section class="py-5 bg-light" id="flavors">
+  <div class="container">
+    <div class="section-header text-center mb-5" data-aos="fade-up">
+      <h2 class="section-title">Our Delicious Flavors</h2>
+      <p class="section-subtitle">Choose from our wide variety of natural candy popsicles</p>
+    </div>
+
+    <!-- Dynamic Product Container -->
+    <div class="row g-4" id="flavorsGrid">
+      <!-- Products will be injected here using JavaScript -->
+    </div>
+  </div>
+</section>
+
+    </section>
+    <!-- Seasonal Products Section -->
+    <section class="py-5" id="seasonal">
+        <div class="container">
+            <div class="section-header text-center mb-5" data-aos="fade-up">
+                <h2 class="section-title">Seasonal Specials</h2>
+                <p class="section-subtitle">Limited-time flavors for the current season</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card seasonal-card h-100">
+                        <div class="seasonal-badge">Summer</div>
+                        <img src="images/chikku.jpeg" class="card-img-top seasonal-img" alt="Summer Mango">
+                        <div class="card-body seasonal-body">
+                            <h5 class="card-title seasonal-title">Chikku</h5>
+                            <p class="card-text seasonal-desc">Savor the deep,malty sweetness of Chikku,a delight for the senses</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card seasonal-card h-100">
+                        <div class="seasonal-badge">Summer</div>
+                        <img src="images/coconut.jpeg" class="card-img-top seasonal-img" alt="Watermelon Chill">
+                        <div class="card-body seasonal-body">
+                            <h5 class="card-title seasonal-title">Tender Coconut</h5>
+                            <p class="card-text seasonal-desc">Refreshing tender coconut a taste of paradise</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card seasonal-card h-100">
+                        <div class="seasonal-badge">Rainy</div>
+                        <img src="images/jackfruit.jpeg" class="card-img-top seasonal-img" alt="Tropical Sunset">
+                        <div class="card-body seasonal-body">
+                            <h5 class="card-title seasonal-title">Jackfruit</h5>
+                            <p class="card-text seasonal-desc">Savor the exotic taste of ripe jackfruit,bursting with tropical sweetness</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
+                    <div class="card seasonal-card h-100">
+                        <div class="seasonal-badge">Summer</div>
+                        <img src="images/wild-mango.jpeg" class="card-img-top seasonal-img" alt="Berry Blast">
+                        <div class="card-body seasonal-body">
+                            <h5 class="card-title seasonal-title">Wild Mango</h5>
+                            <p class="card-text seasonal-desc">Indulge in the wild taste of mango,bursting with sweetness</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Locations Section -->
+    <section class="py-5 bg-light" id="locations">
+        <div class="container">
+            <div class="section-header text-center mb-5" data-aos="fade-up">
+                <h2 class="section-title">Find Us Near You</h2>
+                <p class="section-subtitle">Visit one of our many locations to enjoy our natural candy treats</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card location-card h-100">
+                        <div class="card-body">
+                            <p class="card-text">Mangal Stores Puttur<br>SH 88,Nehru nagar Puttur 574203</p>
+                            <p class="card-text"><i class="fas fa-phone me-2"></i>09481023990</p>
+                            <p class="card-text"><i class="fas fa-clock me-2"></i>Mon-Sun: 08am-09pm</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card location-card h-100">
+                        <div class="card-body">
+                            <p class="card-text">Marike Savayava Malige Puttur<br>APMC road,near karodam gas bazar 574201</p>
+                            <p class="card-text"><i class="fas fa-phone me-2"></i>09480535708</p>
+                            <p class="card-text"><i class="fas fa-clock me-2"></i>Mon-Sat: 9.30am-8pm</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card location-card h-100">
+                        <div class="card-body">
+                            <p class="card-text">Josh Natural Candy <br>Shastavana home kodipadi post&village puttur 574220</p>
+                            <p class="card-text"><i class="fas fa-phone me-2"></i>9632337608<br>08251 281508</p>
+                            <p class="card-text"><i class="fas fa-clock me-2"></i>Mon-Sun: 9am-8pm</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Section -->
+                <section class="py-5" id="contact">
+                    <div class="container">
+                        <div class="section-header text-center mb-5" data-aos="fade-up">
+                            <h2 class="section-title">Contact Us</h2>
+                            <p class="section-subtitle">We'd love to hear from you</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-6" data-aos="fade-right">
+                                <form id="contactForm">
+                                    <div class="mb-3">
+                                        <label for="contactName" class="form-label">Name</label>
+                                        <input type="text" class="form-control" id="contactName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="contactEmail" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactSubject" class="form-label">Subject</label>
+                                        <input type="text" class="form-control" id="contactSubject" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactMessage" class="form-label">Message</label>
+                                        <textarea class="form-control" id="contactMessage" rows="5" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" >Send Message</button>
+                                </form>
+                            </div>
+                            <div class="col-lg-6" data-aos="fade-left">
+                                <div class="contact-info">
+                                    <div class="contact-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <div>
+                                            <h5>Address</h5>
+                                            <p>Josh Natural Candy<br>Shastavana home kodipadi post&village puttur 574220</p>
+                                        </div>
+                                    </div>
+                                    <div class="contact-item">
+                                        <i class="fas fa-phone"></i>
+                                        <div>
+                                            <h5>Phone</h5>
+                                            <p>9632337608<br>08251 281508</p>
+                                        </div>
+                                    </div>
+                                    <div class="contact-item">
+                                        <i class="fas fa-envelope"></i>
+                                        <div>
+                                            <h5>Email</h5>
+                                            <p>info@joshnaturalcandy.com</p>
+                                        </div>
+                                    </div>
+                                    <div class="contact-item">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <h5>Hours</h5>
+                                            <p>Monday - Sunday: 9am-8pm</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- Footer -->
+                <footer class="py-5 bg-dark text-white">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-4 mb-4 mb-lg-0">
+                                <h5 class="footer-title">Josh Natural Candy</h5>
+                                <p>Handcrafted artisanal popsicles made with real fruit and natural ingredients.</p>
+                                <div class="social-icons">
+                                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                                    <a href="#"><i class="fab fa-twitter"></i></a>
+                                    <a href="#"><i class="fab fa-instagram"></i></a>
+                                    <a href="#"><i class="fab fa-pinterest"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
+                                <h5 class="footer-title">Quick Links</h5>
+                                <ul class="footer-links">
+                                    <li><a href="#home">Home</a></li>
+                                    <li><a href="#flavors">Flavors</a></li>
+                                    <li><a href="#about">About</a></li>
+                                    <li><a href="#locations">Locations</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
+                                <h5 class="footer-title">Information</h5>
+                                <ul class="footer-links">
+                                    <li><a href="#seasonal">Seasonal</a></li>
+                                    <li><a href="#contact">Contact</a></li>
+                                    <li><a href="#">Privacy Policy</a></li>
+                                    <li><a href="#">Terms of Service</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-4">
+                                <h5 class="footer-title">Newsletter</h5>
+                                <p>Subscribe to get updates on new flavors and seasonal specials</p>
+                                <form class="newsletter-form">
+                                    <div class="input-group">
+                                        <input type="email" class="form-control" placeholder="Your email" required>
+                                        <button class="btn btn-primary" type="submit">Subscribe</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="row">
+                            <div class="col-md-6 text-center text-md-start">
+                                <p class="mb-0">&copy; 2023 Josh Natural Candy. All rights reserved.</p>
+                            </div>
+                            <div class="col-md-6 text-center text-md-end">
+                                <p class="mb-0">Made with <i class="fas fa-heart text-danger"></i> by Josh Team</p>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+
+                <!-- Bootstrap JS Bundle with Popper -->
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                <!-- AOS Animation -->
+                <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+                <script src="script.js"></script>
+                <!-- Product Details Modal -->
+<div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productDetailsTitle">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <img src="images/" alt="Product" class="img-fluid rounded" id="productDetailsImage" style="max-height: 300px;">
+                </div>
+                <h4 id="productDetailsPrice" class="text-primary mb-3"></h4>
+                <p id="productDetailsDesc"></p>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <button class="btn btn-outline-danger remove-from-cart" id="removeFromCartBtn">
+                        <i class="fas fa-trash me-2"></i> Remove
+                    </button>
+                    <div class="quantity-selector d-flex align-items-center">
+                        <button class="btn btn-sm btn-outline-secondary decrease-quantity">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="mx-3 quantity-value">1</span>
+                        <button class="btn btn-sm btn-outline-secondary increase-quantity">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="toast-container"></div>
+
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+  fetch('./backend/get_products.php')
+    .then(response => response.json())
+    .then(products => {
+      const container = document.getElementById('flavorsGrid');
+      if (!container) return;
+
+      container.innerHTML = ''; // clear previous
+
+      products.forEach((product, index) => {
+        const delay = 100 + (index % 4) * 50; // staggered animation delays
+        const badge = index === 0 ? 'Bestseller' :
+                      index === 2 ? 'Popular' :
+                      index === 4 ? 'New' : '';
+
+        container.innerHTML += `
+          <div class="col-md-6 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="${delay}">
+            <div class="card flavor-card h-100">
+              ${badge ? `<div class="flavor-badge">${badge}</div>` : ''}
+              <img src="images/${product.image}" class="card-img-top flavor-img" alt="${product.name}">
+              <div class="card-body flavor-body">
+                <h5 class="card-title flavor-title">${product.name}</h5>
+                <p class="card-text flavor-desc">${product.description}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="flavor-price">₹${product.price}</span>
+                
+                </div>
+                <button class="btn btn-sm btn-flavor add-to-cart w-100 mt-2" data-id="${product.id}">
+                  <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>`;
+      });
+    })
+    .catch(error => console.error('Error loading products:', error));
+});
+
+</script>
+
+</html>
